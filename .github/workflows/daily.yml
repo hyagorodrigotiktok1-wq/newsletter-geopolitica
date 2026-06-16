@@ -1,11 +1,9 @@
 name: Newsletter diária no WhatsApp
 
 on:
-  schedule:
-    # 10:07 UTC = 07:07 em Brasília (o GitHub atrasa execuções no minuto :00,
-    # então :07 chega mais pontualmente)
-    - cron: "7 10 * * *"
   workflow_dispatch: {}
+  # schedule desativado em 2026-06-16 a pedido do usuário
+  # - cron: "7 10 * * *"
 
 permissions:
   contents: write
