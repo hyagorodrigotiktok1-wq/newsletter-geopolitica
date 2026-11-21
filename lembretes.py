@@ -37,6 +37,8 @@ def mensagem(slot: str, hoje: date) -> str | None:
     n = (hoje - INICIO).days + 1
     area = AREA[hoje.weekday()]
     frase = FRASES[n % len(FRASES)]
+    luta = hoje.weekday() in (0, 2)  # segunda e quarta
+    treino = "Muay thai às 10h" if luta else "Academia às 13:30"
 
     if hoje < INICIO:
         if slot == "noite":
@@ -55,12 +57,13 @@ def mensagem(slot: str, hoje: date) -> str | None:
                 "2. Meditar 5 min\n"
                 "3. Planejar o dia: 3 prioridades\n"
                 "4. Depois: 1h de vendas no digital\n\n"
-                f"Área do dia: {area}.\n\n"
+                f"Área do dia: {area}.\n"
+                f"Treino: {treino}.\n\n"
                 f"{frase}\n{APP}")
     if slot == "almoco":
         return (f"Dia {n}: checagem do meio-dia.\n\n"
                 "- Água: já foram 1,5 L?\n"
-                "- Treino às 13:30\n"
+                + ("- Muay thai feito? Marque o treino no app\n" if luta else "- Academia às 13:30\n") +
                 "- Almoço de comida de verdade\n"
                 f"- 1h de {area} e 1h de vendas: já fez?\n\n"
                 f"{APP}")
