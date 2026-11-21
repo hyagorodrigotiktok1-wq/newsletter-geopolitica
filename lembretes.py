@@ -1,10 +1,11 @@
 """
-Lembretes do Desafio 182 no WhatsApp (via CallMeBot).
+Lembretes do Desafio 182 como notificação no celular (app ntfy).
 
 Uso: python lembretes.py <manha|almoco|tarde|noite|domingo>
 
-Variáveis de ambiente: CALLMEBOT_PHONE, CALLMEBOT_APIKEY (as mesmas da newsletter).
-Sem CALLMEBOT_APIKEY ou com DRY_RUN=1, só imprime a mensagem.
+Variáveis de ambiente: NTFY_TOPIC (canal privado assinado no app ntfy).
+Alternativa: CALLMEBOT_PHONE + CALLMEBOT_APIKEY (WhatsApp; a cota grátis acabou em 11/2026).
+Com DRY_RUN=1, só imprime a mensagem.
 """
 import os
 import re
@@ -109,6 +110,28 @@ def envia(texto: str):
     print("[ok] enviado")
 
 
+def envia_ntfy(texto: str):
+    """Notificação push no celular pelo app ntfy (ntfy.sh). Tocar abre o app do desafio."""
+    texto = texto.replace("Seu app: " + APP, "").replace(APP, "").strip()
+    titulo, _, corpo = texto.partition("\n")
+    r = requests.post(
+        "https://ntfy.sh/",
+        json={
+            "topic": os.environ["NTFY_TOPIC"],
+            "title": titulo.strip(),
+            "message": corpo.strip() or titulo.strip(),
+            "click": APP,
+            "tags": ["sunrise"],
+            "priority": 4,
+            "actions": [{"action": "view", "label": "Abrir o app", "url": APP}],
+        },
+        timeout=60,
+    )
+    print(f"[ntfy] HTTP {r.status_code}")
+    r.raise_for_status()
+    print("[ok] enviado")
+
+
 def main():
     slot = sys.argv[1] if len(sys.argv) > 1 else ""
     hoje = datetime.now(ZoneInfo("America/Sao_Paulo")).date()
@@ -118,11 +141,16 @@ def main():
     if not texto:
         print(f"[skip] nada para enviar em {hoje} ({slot})")
         return
-    if os.environ.get("DRY_RUN") or not os.environ.get("CALLMEBOT_APIKEY"):
+    if os.environ.get("DRY_RUN"):
         print(texto)
         print("\n[dry-run] nada foi enviado", file=sys.stderr)
         return
-    envia(texto)
+    if os.environ.get("NTFY_TOPIC"):
+        envia_ntfy(texto)
+    elif os.environ.get("CALLMEBOT_APIKEY"):
+        envia(texto)
+    else:
+        raise SystemExit("[erro] configure NTFY_TOPIC (ou CALLMEBOT_APIKEY)")
 
 
 if __name__ == "__main__":

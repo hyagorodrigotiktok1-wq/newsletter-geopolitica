@@ -30,8 +30,7 @@ jobs:
 
       - name: Enviar lembrete
         env:
-          CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
-          CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           SCHEDULE: ${{ github.event.schedule }}
           SLOT_MANUAL: ${{ inputs.slot }}
         run: |
