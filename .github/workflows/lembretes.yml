@@ -1,0 +1,46 @@
+name: Lembretes do Desafio 182
+
+# Horários em UTC (Brasília = UTC-3). O GitHub pode atrasar alguns minutos.
+on:
+  schedule:
+    - cron: "15 8 * * *"   # 05:15 manhã: ritual
+    - cron: "30 15 * * *"  # 12:30 almoço: água, treino
+    - cron: "30 21 * * *"  # 18:30 tarde: o que falta
+    - cron: "0 1 * * *"    # 22:00 noite: desacelerar
+    - cron: "0 12 * * 0"   # 09:00 de domingo: planejar a semana
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: "manha, almoco, tarde, noite ou domingo"
+        required: true
+        default: manha
+
+jobs:
+  lembrar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests tzdata
+
+      - name: Enviar lembrete
+        env:
+          CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
+          CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+          SCHEDULE: ${{ github.event.schedule }}
+          SLOT_MANUAL: ${{ inputs.slot }}
+        run: |
+          case "$SCHEDULE" in
+            "15 8 * * *")  SLOT=manha ;;
+            "30 15 * * *") SLOT=almoco ;;
+            "30 21 * * *") SLOT=tarde ;;
+            "0 1 * * *")   SLOT=noite ;;
+            "0 12 * * 0")  SLOT=domingo ;;
+            *)             SLOT="$SLOT_MANUAL" ;;
+          esac
+          python lembretes.py "$SLOT"
