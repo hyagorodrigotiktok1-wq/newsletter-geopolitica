@@ -7,6 +7,7 @@ Variáveis de ambiente: CALLMEBOT_PHONE, CALLMEBOT_APIKEY (as mesmas da newslett
 Sem CALLMEBOT_APIKEY ou com DRY_RUN=1, só imprime a mensagem.
 """
 import os
+import re
 import sys
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -99,6 +100,12 @@ def envia(texto: str):
         timeout=120,
     )
     r.raise_for_status()
+    # O CallMeBot responde 200 mesmo quando recusa a mensagem; o motivo vem no corpo.
+    corpo = re.sub(r"<[^>]+>", " ", r.text)
+    corpo = re.sub(r"\s+", " ", corpo).strip()
+    print(f"[callmebot] {corpo[:600]}")
+    if not re.search(r"queued|sent|enviad", corpo, re.I) or re.search(r"error|invalid|not ", corpo, re.I):
+        raise SystemExit("[erro] o CallMeBot não confirmou o envio (veja a resposta acima)")
     print("[ok] enviado")
 
 
